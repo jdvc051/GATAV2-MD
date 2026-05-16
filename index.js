@@ -47,7 +47,6 @@ process.exit(1)
 async function start(file) {
 if (isRunning) return
 isRunning = true
-const currentFilePath = new URL(import.meta.url).pathname
 let args = [join(__dirname, file), ...process.argv.slice(2)]
 say([process.argv[0], ...args].join(' '), {
 font: 'console',
@@ -61,7 +60,7 @@ switch (data) {
 case 'reset':
 p.process.kill()
 isRunning = false
-start.apply(this, arguments)
+start(file)
 break
 case 'uptime':
 p.send(process.uptime())
@@ -83,7 +82,7 @@ start(file)
 
 const ramInGB = os.totalmem() / (1024 * 1024 * 1024)
 const freeRamInGB = os.freemem() / (1024 * 1024 * 1024)
-const packageJsonPath = path.join(path.dirname(currentFilePath), './package.json')
+const packageJsonPath = path.join(__dirname, './package.json')
 try {
 const packageJsonData = await fsPromises.readFile(packageJsonPath, 'utf-8')
 const packageJsonObj = JSON.parse(packageJsonData)
@@ -113,17 +112,18 @@ chalk.yellow(`╭${lineM}
 ┊${chalk.blueBright('╰┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅')} 
 ╰${lineM}`)
 )
-setInterval(() => {}, 1000)
 } catch (err) {
 console.error(chalk.red(`❌ No se pudo leer el archivo package.json: ${err}`))
 }
 
 let opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse())
-if (!opts['test'])
-if (!rl.listenerCount())
+if (!opts['test']) {
+if (!rl.listenerCount()) {
 rl.on('line', (line) => {
 p.emit('message', line.trim())
 })
+}
+}
 }
 
 start('main.js')
